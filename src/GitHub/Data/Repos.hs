@@ -16,6 +16,7 @@ import GitHub.Data.Id          (Id)
 import GitHub.Data.Name        (Name)
 import GitHub.Data.Request     (IsPathPart (..))
 import GitHub.Data.URL         (URL)
+import GitHub.Data.Collection  (CollectionName(..))
 import GitHub.Internal.Prelude
 import Prelude ()
 
@@ -268,3 +269,8 @@ instance IsPathPart ArchiveFormat where
     toPathPart af = case af of
         ArchiveFormatTarball -> "tarball"
         ArchiveFormatZipball -> "zipball"
+
+-- CollectionName instances
+
+instance CollectionName Repo where
+  collectionName _ = "repositories"
