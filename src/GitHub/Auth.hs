@@ -19,6 +19,7 @@ data Auth
     | EnterpriseOAuth Text    -- custom API endpoint without
                               -- trailing slash
                       Token   -- token
+    | JWTAuth Token -- ^ @Authorization: Bearer @ token
     deriving (Show, Data, Typeable, Eq, Ord, Generic)
 
 instance NFData Auth where rnf = genericRnf

@@ -13,7 +13,7 @@ module GitHub.Data.Request (
     Request (..),
     SimpleRequest (..),
     -- * Smart constructors
-    query, pagedQuery, command,
+    query, pagedQuery, generalizedPagedQuery, command, appCommand,
     -- * Auxiliary types
     RW(..),
     StatusMap,
@@ -118,8 +118,9 @@ instance NFData FetchCount where rnf = genericRnf
 -- or aren't read-only.
 data RW
     = RO  -- ^ /Read-only/, doesn't necessarily requires authentication
-    | RA  -- ^ /Read autenticated/
+    | RA  -- ^ /Read authenticated/
     | RW  -- ^ /Read-write/, requires authentication
+    | AA  -- ^ /Authenticated app/, authenticate not as a user but as an app
   deriving (Eq, Ord, Read, Show, Enum, Bounded, Typeable, Data, Generic)
 
 {-
@@ -149,7 +150,9 @@ data Request (k :: RW) a where
 data SimpleRequest (k :: RW) a where
     Query        :: Paths -> QueryString -> SimpleRequest k a
     PagedQuery   :: Paths -> QueryString -> FetchCount -> SimpleRequest k (Vector a)
-    Command      :: CommandMethod a -> Paths -> LBS.ByteString -> SimpleRequest 'RW a
+    GeneralizedPagedQuery
+                 :: (Semigroup (t a), Foldable t) => Paths -> QueryString -> FetchCount -> SimpleRequest k (t a)
+    Command      :: CommandMethod a -> Paths -> LBS.ByteString -> SimpleRequest k a
   deriving (Typeable)
 
 -------------------------------------------------------------------------------
@@ -175,8 +178,14 @@ query ps qs = SimpleQuery (Query ps qs)
 pagedQuery :: FromJSON a => Paths -> QueryString -> FetchCount -> Request k (Vector a)
 pagedQuery ps qs fc = SimpleQuery (PagedQuery ps qs fc)
 
+generalizedPagedQuery :: (Foldable t, Semigroup (t a), FromJSON (t a)) => Paths -> QueryString -> FetchCount -> Request k (t a)
+generalizedPagedQuery ps qs fc = SimpleQuery (GeneralizedPagedQuery ps qs fc)
+
 command :: FromJSON a => CommandMethod a -> Paths -> LBS.ByteString -> Request 'RW a
 command m ps body = SimpleQuery (Command m ps body)
+
+appCommand :: FromJSON a => CommandMethod a -> Paths -> LBS.ByteString -> Request 'AA a
+appCommand m ps body = SimpleQuery (Command m ps body)
 
 -------------------------------------------------------------------------------
 -- Instances
@@ -195,6 +204,12 @@ instance Show (SimpleRequest k a) where
             . showString " "
             . showsPrec (appPrec + 1) qs
         PagedQuery ps qs l -> showString "PagedQuery "
+            . showsPrec (appPrec + 1) ps
+            . showString " "
+            . showsPrec (appPrec + 1) qs
+            . showString " "
+            . showsPrec (appPrec + 1) l
+        GeneralizedPagedQuery ps qs l -> showString "GeneralizedPagedQuery "
             . showsPrec (appPrec + 1) ps
             . showString " "
             . showsPrec (appPrec + 1) qs
@@ -233,6 +248,11 @@ instance Hashable (SimpleRequest k a) where
              `hashWithSalt` qs
     hashWithSalt salt (PagedQuery ps qs l) =
         salt `hashWithSalt` (1 :: Int)
+             `hashWithSalt` ps
+             `hashWithSalt` qs
+             `hashWithSalt` l
+    hashWithSalt salt (GeneralizedPagedQuery ps qs l) =
+        salt `hashWithSalt` (3 :: Int)
              `hashWithSalt` ps
              `hashWithSalt` qs
              `hashWithSalt` l
