@@ -60,11 +60,22 @@ data Repo = Repo
     , repoSource          :: !(Maybe RepoRef)
     , repoHooksUrl        :: !URL
     , repoStargazersCount :: !Int
+    , repoPermissions     :: !(Maybe RepoPermissions) -- Is this ever Nothing?
     }
     deriving (Show, Data, Typeable, Eq, Ord, Generic)
 
 instance NFData Repo where rnf = genericRnf
 instance Binary Repo
+
+data RepoPermissions = RepoPermissions
+    { repoPermissionAdmin :: Bool
+    , repoPermissionPush :: Bool
+    , repoPermissionPull :: Bool
+    }
+    deriving (Show, Data, Typeable, Eq, Ord, Generic)
+
+instance NFData RepoPermissions where rnf = genericRnf
+instance Binary RepoPermissions
 
 data RepoRef = RepoRef
     { repoRefOwner :: !SimpleOwner
@@ -180,6 +191,13 @@ instance FromJSON Repo where
         <*> o .:? "source"
         <*> o .: "hooks_url"
         <*> o .: "stargazers_count"
+        <*> o .:? "permissions"
+
+instance FromJSON RepoPermissions where
+  parseJSON = withObject "RepoPermissions" $ \o -> RepoPermissions
+        <$> o .: "admin"
+        <*> o .: "push"
+        <*> o .: "pull"
 
 instance ToJSON NewRepo where
   toJSON (NewRepo { newRepoName         = name
