@@ -21,3 +21,11 @@ installationRepositoriesR = generalizedPagedQuery ["installation", "repositories
 -- | See https://developer.github.com/v3/apps/installations/#list-repositories
 installationRepositories' :: Auth -> IO (Either Error (Collection Repo))
 installationRepositories' auth = executeRequest auth $ installationRepositoriesR FetchAll
+
+
+installationsAccessTokensR :: Id Installation -> Request 'AA InstallationToken
+installationsAccessTokensR instId =
+  appCommand Post ["installations", toPathPart instId, "access_tokens"] mempty
+
+installationsAccessTokens' :: Auth -> Id Installation -> IO (Either Error InstallationToken)
+installationsAccessTokens' auth instId = executeRequest auth $ installationsAccessTokensR instId

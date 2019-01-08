@@ -33,3 +33,11 @@ userInstallationsR = generalizedPagedQuery ["user", "installations"] []
 userInstallations' :: Auth -> IO (Either Error (Collection Installation))
 userInstallations' auth = executeRequest auth $ userInstallationsR FetchAll
 
+-- | See https://developer.github.com/v3/apps/#get-a-single-installation
+getInstallationR :: Id Installation -> Request 'AA Installation
+getInstallationR instId =
+  query ["app", "installations", toPathPart instId] []
+
+-- | See https://developer.github.com/v3/apps/#get-a-single-installation
+getInstallation' :: Auth -> Id Installation -> IO (Either Error (Installation))
+getInstallation' auth iid = executeRequest auth $ getInstallationR iid
