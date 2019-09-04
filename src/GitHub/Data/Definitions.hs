@@ -8,7 +8,6 @@ module GitHub.Data.Definitions where
 import GitHub.Internal.Prelude
 import Prelude ()
 
-import Control.Monad       (mfilter)
 import Data.Aeson.Types    (Parser)
 import Network.HTTP.Client (HttpException)
 
@@ -32,7 +31,7 @@ data Error
 instance E.Exception Error
 
 -- | Type of the repository owners.
-data OwnerType = OwnerUser | OwnerOrganization
+data OwnerType = OwnerUser | OwnerOrganization | OwnerBot
     deriving (Eq, Ord, Enum, Bounded, Show, Read, Generic, Typeable, Data)
 
 instance NFData OwnerType
@@ -77,7 +76,7 @@ data User = User
     { userId          :: !(Id User)
     , userLogin       :: !(Name User)
     , userName        :: !(Maybe Text)
-    , userType        :: !OwnerType  -- ^ Should always be 'OwnerUser'
+    , userType        :: !OwnerType  -- ^ Should always be 'OwnerUser' or 'OwnerBot'
     , userCreatedAt   :: !UTCTime
     , userPublicGists :: !Int
     , userAvatarUrl   :: !URL
@@ -136,6 +135,7 @@ fromOwner (Owner owner) = owner
 instance FromJSON OwnerType where
     parseJSON = withText "Owner type" $ \t ->
         case t of
+            "Bot"           -> pure $ OwnerBot
             "User"          -> pure $ OwnerUser
             "Organization"  -> pure $ OwnerOrganization
             _               -> fail $ "Unknown owner type: " ++ T.unpack t
@@ -206,7 +206,7 @@ parseOrganization obj = Organization
     <*> obj .: "created_at"
 
 instance FromJSON User where
-    parseJSON = mfilter ((== OwnerUser) . userType) . withObject "User" parseUser
+    parseJSON = withObject "User" parseUser
 
 instance FromJSON Organization where
     parseJSON = withObject "Organization" parseOrganization
@@ -216,6 +216,7 @@ instance FromJSON Owner where
         t <- obj .: "type"
         case t of
             OwnerUser         -> Owner . Left <$> parseUser obj
+            OwnerBot          -> Owner . Left <$> parseUser obj
             OwnerOrganization -> Owner . Right <$> parseOrganization obj
 
 -- | Filter members returned in the list.
