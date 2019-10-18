@@ -80,6 +80,7 @@ Library
     GitHub.Data.Id
     GitHub.Data.Invitation
     GitHub.Data.Issues
+    GitHub.Data.Membership
     GitHub.Data.Milestone
     GitHub.Data.Name
     GitHub.Data.Options

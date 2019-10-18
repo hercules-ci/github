@@ -226,6 +226,9 @@ data OrgMemberFilter
     deriving (Show, Eq, Ord, Enum, Bounded, Typeable, Data, Generic)
 
 -- | Filter members returned by their role.
+--
+-- This is for querying.
+-- For the response variation, see 'GitHub.Data.Membership.MembershipRole'
 data OrgMemberRole
     = OrgMemberRoleAll     -- ^ All members of the organization, regardless of role.
     | OrgMemberRoleAdmin   -- ^ Organization owners.
