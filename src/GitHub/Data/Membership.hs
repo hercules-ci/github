@@ -9,8 +9,10 @@ import Prelude ()
 
 -- state field
 
-data MembershipState = Active | Pending
-  deriving (Show, Data, Typeable, Eq, Ord, Generic)
+data MembershipState
+   = MembershipStateActive
+   | MembershipStatePending
+   deriving (Show, Data, Typeable, Eq, Ord, Generic)
 
 instance NFData MembershipState where rnf = genericRnf
 instance Binary MembershipState
@@ -18,14 +20,16 @@ instance Binary MembershipState
 instance FromJSON MembershipState where
     parseJSON = withText "Membership state" $ \t ->
         case t of
-          "pending" -> pure Pending
-          "active"  -> pure Active
+          "pending" -> pure MembershipStatePending
+          "active"  -> pure MembershipStateActive
           _         -> fail $ "Unknown membership state: " ++ T.unpack t
 
 
 -- role field
 
-data MembershipRole = Admin | Member
+data MembershipRole
+   = MembershipRoleAdmin
+   | MembershipRoleMember
   deriving (Show, Data, Typeable, Eq, Ord, Generic)
 
 instance NFData MembershipRole where rnf = genericRnf
@@ -34,8 +38,8 @@ instance Binary MembershipRole
 instance FromJSON MembershipRole where
   parseJSON = withText "Membership role" $ \t ->
       case t of
-        "admin"  -> pure Admin
-        "member" -> pure Member
+        "admin"  -> pure MembershipRoleAdmin
+        "member" -> pure MembershipRoleMember
         _        -> fail $ "Unknown membership role: " ++ T.unpack t
 
 
@@ -60,5 +64,3 @@ instance FromJSON Membership where
         <*> o .: "organization"
         <*> o .: "user"
         <*> o .: "url"
-
-
