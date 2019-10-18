@@ -14,6 +14,7 @@ module GitHub.Endpoints.Organizations.Members (
     isMemberOf',
     isMemberOfR,
     orgInvitationsR,
+    orgMembershipR,
     module GitHub.Data,
     ) where
 
@@ -86,3 +87,11 @@ isMemberOfR user org = StatusQuery statusOnlyOk $
 -- See <https://developer.github.com/v3/orgs/members/#list-pending-organization-invitations>
 orgInvitationsR :: Name Organization -> FetchCount -> Request 'RA (Vector Invitation)
 orgInvitationsR org = pagedQuery ["orgs", toPathPart org, "invitations"] []
+
+-- | Get organization membership
+--
+-- Field state maybe be pending. Responds 404 if membership does not exist.
+--
+-- See <https://developer.github.com/v3/orgs/members/#get-organization-membership>
+orgMembershipR :: Name Organization -> Name User -> Request k Membership
+orgMembershipR org user = query ["orgs", toPathPart org, "memberships", toPathPart user] []
