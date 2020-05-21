@@ -278,6 +278,7 @@ makeHttpSimpleRequest auth r = case r of
     baseUrl :: Text
     baseUrl = case auth of
         Just (EnterpriseOAuth endpoint _)  -> endpoint
+        Just (JWTAuth endpoint _)          -> endpoint
         _                                  -> "https://api.github.com"
 
     setReqHeaders :: HTTP.Request -> HTTP.Request
@@ -301,7 +302,7 @@ makeHttpSimpleRequest auth r = case r of
     getOAuthHeader :: Auth -> RequestHeaders
     getOAuthHeader (OAuth token)             = [("Authorization", "token " <> token)]
     getOAuthHeader (EnterpriseOAuth _ token) = [("Authorization", "token " <> token)]
-    getOAuthHeader (JWTAuth token)           = [("Authorization", "Bearer " <> token)]
+    getOAuthHeader (JWTAuth _ token)         = [("Authorization", "Bearer " <> token)]
     getOAuthHeader _                         = []
 
 -- | Query @Link@ header with @rel=next@ from the request headers.
